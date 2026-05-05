@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebCAD Pro — Профессиональная CAD-система</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+:root{--bg-primary:#1a1a2e;--bg-secondary:#16213e;--bg-tertiary:#0f3460;--bg-panel:#1c1c3a;--bg-hover:#2a2a4a;--text-primary:#e8e8f0;--text-secondary:#a0a0b8;--accent:#4a9eff;--accent-hover:#6bb5ff;--danger:#ff4a6a;--success:#4aff8a;--warning:#ffca4a;--border:#2e2e5a;--grid-color:rgba(74,158,255,0.08);--grid-major:rgba(74,158,255,0.15);--shadow:0 4px 20px rgba(0,0,0,0.4)}
+body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);overflow:hidden;height:100vh;width:100vw}
+#app{display:flex;flex-direction:column;height:100vh}
+.menubar{display:flex;align-items:center;background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 8px;height:40px;gap:4px;z-index:100}
+.menubar .logo{font-weight:700;font-size:15px;color:var(--accent);margin-right:16px;letter-spacing:1px}
+.menubar .logo span{color:var(--text-secondary);font-weight:300;font-size:11px;margin-left:6px}
+.menu-item{padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-secondary);transition:all .2s;position:relative}
+.menu-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.menu-dropdown{display:none;position:absolute;top:100%;left:0;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:200px;z-index:200;box-shadow:var(--shadow)}
+.menu-item:hover .menu-dropdown{display:block}
+.dropdown-item{padding:8px 12px;border-radius:5px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:10px;transition:all .15s}
+.dropdown-item:hover{background:var(--accent);color:#fff}
+.dropdown-item .shortcut{margin-left:auto;font-size:11px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace}
+.dropdown-item:hover .shortcut{color:rgba(255,255,255,0.7)}
+.dropdown-sep{height:1px;background:var(--border);margin:4px 8px}
+.toolbar{display:flex;flex-direction:column;background:var(--bg-secondary);border-right:1px solid var(--border);width:52px;padding:8px 4px;gap:2px;overflow-y:auto;z-index:100}
+.tool-btn{width:44px;height:44px;border:none;background:transparent;color:var(--text-secondary);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative;flex-shrink:0}
+.tool-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
+.tool-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 12px rgba(74,158,255,0.3)}
+.tool-btn svg{width:20px;height:20px;pointer-events:none}
+.tool-btn .tooltip{display:none;position:absolute;left:56px;top:50%;transform:translateY(-50%);background:var(--bg-panel);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:12px;white-space:nowrap;z-index:300;box-shadow:var(--shadow)}
+.tool-btn:hover .tooltip{display:block}
+.tool-sep{height:1px;background:var(--border);margin:4px 2px}
+.main-area{display:flex;flex:1;overflow:hidden}
+.canvas-container{flex:1;position:relative;overflow:hidden;background:var(--bg-primary)}
+#mainCanvas{position:absolute;top:0;left:0;cursor:crosshair}
+.canvas-info{position:absolute;bottom:8px;left:8px;display:flex;gap:12px;font-size:11px;color:var(--text-secondary);background:rgba(26,26,46,0.9);padding:6px 12px;border-radius:6px;border:1px solid var(--border)}
+.canvas-info span{font-family:'JetBrains Mono',monospace}
+.canvas-controls{position:absolute;bottom:8px;right:8px;display:flex;gap:4px}
+.canvas-controls button{width:32px;height:32px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text-secondary);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.canvas-controls button:hover{background:var(--bg-hover);color:var(--text-primary)}
+.right-panel{width:260px;background:var(--bg-secondary);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;z-index:100}
+.panel-section{padding:12px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:10px;font-weight:600}
+.prop-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.prop-label{font-size:12px;color:var(--text-secondary);min-width:60px}
+.prop-input{flex:1;background:var(--bg-primary);border:1px solid var(--border);color:var(--text-primary);padding:6px 8px;border-radius:5px;font-size:12px;font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .2s}
+.prop-input:focus{border-color:var(--accent)}
+.prop-input[type="color"]{padding:2px;height:30px;cursor:pointer}
+.color-row{display:flex;gap:6px;flex-wrap:wrap}
+.color-swatch{width:24px;height:24px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.color-swatch:hover,.color-swatch.active{border-color:var(--accent);transform:scale(1.1)}
+.layer-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;transition:all .15s;font-size:12px}
+.layer-item:hover{background:var(--bg-hover)}
+.layer-item.active{background:rgba(74,158,255,0.15);color:var(--accent)}
+.layer-vis{width:16px;height:16px;cursor:pointer;opacity:0.6;transition:opacity .2s}
+.layer-vis:hover{opacity:1}
+.status-bar{display:flex;align-items:center;justify-content:space-between;background:var(--bg-secondary);border-top:1px solid var(--border);padding:0 12px;height:28px;font-size:11px;color:var(--text-secondary);z-index:100}
+.status-bar .mode{color:var(--accent);font-weight:500}
+.status-bar .coords{font-family:'JetBrains Mono',monospace}
+.context-menu{display:none;position:fixed;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:180px;z-index:500;box-shadow:var(--shadow)}
+.context-menu .dropdown-item{padding:6px 10px;font-size:12px}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:24px;min-width:350px;box-shadow:var(--shadow)}
+.modal h3{margin-bottom:16px;font-size:16px;color:var(--text-primary)}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.btn{padding:8px 20px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg-hover);color:var(--text-primary)}
+.btn-secondary:hover{background:var(--border)}
+.shape-list{max-height:200px;overflow-y:auto}
+.shape-item{padding:6px 8px;font-size:12px;display:flex;align-items:center;gap:8px;border-radius:5px;cursor:pointer;transition:all .15s}
+.shape-item:hover{background:var(--bg-hover)}
+.shape-item.selected{background:rgba(74,158,255,0.15);color:var(--accent)}
+.shape-item .shape-type{width:20px;text-align:center}
+.snap-indicator{position:absolute;width:10px;height:10px;border:2px solid var(--warning);border-radius:50%;pointer-events:none;z-index:50}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--bg-hover)}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="menubar">
+<div class="logo">WebCAD <span>Pro v2.0</span></div>
+<div class="menu-item">Файл
+<div class="menu-dropdown">
+<div class="dropdown-item" onclick="newProject()">📄 Новый <span class="shortcut">Ctrl+N</span></div>
+<div class="dropdown-item" onclick="saveProject()">💾 Сохранить <span class="shortcut">Ctrl+S</span></div>
+<div class="dropdown-item" onclick="loadProject()">📂 Загрузить <span class="shortcut">Ctrl+O</span></div>
+<div class="dropdown-sep"></div>
+<div class="dropdown-item" onclick="exportPNG()">🖼️ Экспорт PNG <span class="shortcut">Ctrl+E</span></div>
+<div class="dropdown-item" onclick="exportSVG()">📐 Экспорт SVG</div>
+<div class="dropdown-sep"></div>
+<div class="dropdown-item" onclick="showHelp()">❓ Справка</div>
+</div>
+</div>
+<div class="menu-item">Редактирование
+<div class="menu-dropdown">
+<div class="dropdown-item" onclick="undo()">↩️ Отменить <span class="shortcut">Ctrl+Z</span></div>
+<div class="dropdown-item" onclick="redo()">↪️ Повторить <span class="shortcut">Ctrl+Y</span></div>
+<div class="dropdown-sep"></div>
+<div class="dropdown-item" onclick="selectAll()">🔲 Выбрать всё <span class="shortcut">Ctrl+A</span></div>
+<div class="dropdown-item" onclick="deleteSelected()">🗑️ Удалить <span class="shortcut">Delete</span></div>
+<div class="dropdown-item" onclick="duplicateSelected()">📋 Дублировать <span class="shortcut">Ctrl+D</span></div>
+</div>
+</div>
+<div class="menu-item">Вид
+<div class="menu-dropdown">
+<div class="dropdown-item" onclick="zoomIn()">🔍+ Увеличить <span class="shortcut">+</span></div>
+<div class="dropdown-item" onclick="zoomOut()">🔍− Уменьшить <span class="shortcut">−</span></div>
+<div class="dropdown-item" onclick="fitView()">📐 Показать всё <span class="shortcut">F</span></div>
+<div class="dropdown-sep"></div>
+<div class="dropdown-item" onclick="toggleGrid()">⊞ Сетка <span class="shortcut">G</span></div>
+<div class="dropdown-item" onclick="toggleSnap()">🧲 Привязка <span class="shortcut">S</span></div>
+</div>
+</div>
+</div>
+<div class="main-area">
+<div class="toolbar" id="toolbar"></div>
+<div class="canvas-container" id="canvasContainer">
+<canvas id="mainCanvas"></canvas>
+<div class="canvas-info">
+<span id="coordDisplay">X: 0 Y: 0</span>
+<span>|</span>
+<span id="zoomDisplay">100%</span>
+<span>|</span>
+<span id="shapeCount">0 объектов</span>
+</div>
+<div class="canvas-controls">
+<button onclick="zoomIn()" title="Приблизить">+</button>
+<button onclick="zoomOut()" title="Отдалить">−</button>
+<button onclick="fitView()" title="Показать всё">⊞</button>
+</div>
+</div>
+<div class="right-panel">
+<div class="panel-section">
+<div class="panel-title">Свойства</div>
+<div id="propertiesPanel">
+<div class="prop-row"><span class="prop-label">Цвет</span><input type="color" class="prop-input" id="propColor" value="#4a9eff" onchange="applyProperty('color',this.value)"></div>
+<div class="prop-row"><span class="prop-label">Линия</span><input type="range" class="prop-input" id="propStroke" min="1" max="10" value="2" oninput="applyProperty('stroke',parseInt(this.value))"></div>
+<div class="prop-row"><span class="prop-label">Стиль</span><select class="prop-input" id="propLineStyle" onchange="applyProperty('lineStyle',this.value)">
+<option value="solid">Сплошная</option>
+<option value="dashed">Пунктир</option>
+<option value="dotted">Точки</option>
+</select></div>
+<div class="prop-row"><span class="prop-label">Заполн.</span><input type="color" class="prop-input" id="propFill" value="#1a1a2e" onchange="applyProperty('fill',this.value)"></div>
+<div class="prop-row"><span class="prop-label">X</span><input type="number" class="prop-input" id="propX" step="1" onchange="applyProperty('x',parseFloat(this.value))"></div>
+<div class="prop-row"><span class="prop-label">Y</span><input type="number" class="prop-input" id="propY" step="1" onchange="applyProperty('y',parseFloat(this.value))"></div>
+<div class="prop-row"><span class="prop-label">Ширина</span><input type="number" class="prop-input" id="propW" step="1" onchange="applyProperty('w',parseFloat(this.value))"></div>
+<div class="prop-row"><span class="prop-label">Высота</span><input type="number" class="prop-input" id="propH" step="1" onchange="applyProperty('h',parseFloat(this.value))"></div>
+</div>
+</div>
+<div class="panel-section">
+<div class="panel-title">Слои</div>
+<div id="layersPanel"></div>
+<button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="addLayer()">+ Добавить слой</button>
+</div>
+<div class="panel-section">
+<div class="panel-title">Объекты</div>
+<div class="shape-list" id="shapeList"></div>
+</div>
+</div>
+</div>
+<div class="status-bar">
+<span class="mode" id="modeDisplay">Инструмент: Выделение</span>
+<span class="coords" id="snapStatus">Привязка: ВЫКЛ</span>
+<span class="coords" id="gridStatus">Сетка: 20px</span>
+</div>
+</div>
+
+<div class="context-menu" id="contextMenu">
+<div class="dropdown-item" onclick="deleteSelected()">🗑️ Удалить</div>
+<div class="dropdown-item" onclick="duplicateSelected()">📋 Дублировать</div>
+<div class="dropdown-sep"></div>
+<div class="dropdown-item" onclick="bringToFront()">⬆️ На передний план</div>
+<div class="dropdown-item" onclick="sendToBack()">⬇️ На задний план</div>
+</div>
+
+<div class="modal-overlay" id="helpModal">
+<div class="modal">
+<h3>⌨️ Горячие клавиши</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px">
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">V</span> — Выделение</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">L</span> — Линия</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">R</span> — Прямоугольник</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">C</span> — Окружность</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">E</span> — Эллипс</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">P</span> — Многоугольник</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">T</span> — Текст</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">F</span> — Показать всё</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">G</span> — Сетка</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">S</span> — Привязка</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">Ctrl+Z</span> — Отмена</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">Delete</span> — Удалить</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">Ctrl+A</span> — Выбрать всё</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">Ctrl+D</span> — Дублировать</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">Колесо</span> — Масштаб</div>
+<div><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">СКМ</span> — Перемещение</div>
+</div>
+<div class="modal-actions">
+<button class="btn btn-primary" onclick="closeHelp()">Закрыть</button>
+</div>
+</div>
+</div>
+
+<script>
+const canvas=document.getElementById('mainCanvas');
+const ctx=canvas.getContext('2d');
+const container=document.getElementById('canvasContainer');
+
+// State
+let shapes=[];
+let selectedShapes=[];
+let currentTool='select';
+let zoom=1;
+let panX=0,panY=0;
+let isDragging=false;
+let isPanning=false;
+let panStart={x:0,y:0};
+let drawStart=null;
+let currentShape=null;
+let undoStack=[];
+let redoStack=[];
+let gridSize=20;
+let showGrid=true;
+let snapToGrid=false;
+let layers=[{id:0,name:'Слой 1',visible:true,locked:false}];
+let activeLayerId=0;
+let polygonPoints=[];
+let isDrawingPolygon=false;
+let nextId=1;
+
+// Tools definition
+const tools=[
+{id:'select',name:'Выделение',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l7 18 3-7 7-3z"/></svg>'},
+{id:'line',name:'Линия',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>'},
+{id:'rect',name:'Прямоугольник',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1"/></svg>'},
+{id:'circle',name:'Окружность',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>'},
+{id:'ellipse',name:'Эллипс',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="6"/></svg>'},
+{id:'polygon',name:'Многоугольник',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,3 20,9 17,19 7,19 4,9"/></svg>'},
+{id:'arc',name:'Дуга',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19 A10 10 0 0 1 19 5"/></svg>'},
+{id:'text',name:'Текст',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12M12 4v16M8 20h8"/></svg>'},
+{id:'dimension',name:'Размер',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="20" x2="20" y2="20"/><line x1="4" y1="16" x2="4" y2="24"/><line x1="20" y1="16" x2="20" y2="24"/><text x="12" y="18" text-anchor="middle" font-size="8" fill="currentColor" stroke="none">↔</text></svg>'},
+];
+
+const toolSeparators=[2,5,7];
+
+function initToolbar(){
+const tb=document.getElementById('toolbar');
+tb.innerHTML='';
+tools.forEach((t,i)=>{
+if(toolSeparators.includes(i)){
+const sep=document.createElement('div');
+sep.className='tool-sep';
+tb.appendChild(sep);
+}
+const btn=document.createElement('button');
+btn.className='tool-btn'+(currentTool===t.id?' active':'');
+btn.innerHTML=t.icon+'<span class="tooltip">'+t.name+'</span>';
+btn.onclick=()=>setTool(t.id);
+btn.id='tool-'+t.id;
+tb.appendChild(btn);
+});
+}
+
+function setTool(id){
+currentTool=id;
+document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+const btn=document.getElementById('tool-'+id);
+if(btn)btn.classList.add('active');
+const names={select:'Выделение',line:'Линия',rect:'Прямоугольник',circle:'Окружность',ellipse:'Эллипс',polygon:'Многоугольник',arc:'Дуга',text:'Текст',dimension:'Размер'};
+document.getElementById('modeDisplay').textContent='Инструмент: '+(names[id]||id);
+if(id!=='polygon'){isDrawingPolygon=false;polygonPoints=[];}
+updateCursor();
+}
+
+function updateCursor(){
+if(currentTool==='select')canvas.style.cursor='default';
+else if(currentTool==='line'||currentTool==='rect'||currentTool==='circle'||currentTool==='ellipse'||currentTool==='polygon'||currentTool==='arc'||currentTool==='text'||currentTool==='dimension')canvas.style.cursor='crosshair';
+else canvas.style.cursor='default';
+}
+
+// Resize canvas
+function resizeCanvas(){
+canvas.width=container.clientWidth;
+canvas.height=container.clientHeight;
+render();
+}
+window.addEventListener('resize',resizeCanvas);
+
+// Coordinate transforms
+function screenToWorld(sx,sy){return{x:(sx-panX)/zoom,y:(sy-panY)/zoom};}
+function worldToScreen(wx,wy){return{x:wx*zoom+panX,y:wy*zoom+panY};}
+
+function snapCoord(v){
+if(snapToGrid)return Math.round(v/gridSize)*gridSize;
+return v;
+}
+function snapPoint(p){return{x:snapCoord(p.x),y:snapCoord(p.y)};}
+
+// Grid rendering
+function drawGrid(){
+if(!showGrid)return;
+const w=canvas.width,h=canvas.height;
+const start=screenToWorld(0,0);
+const end=screenToWorld(w,h);
+const gs=gridSize;
+const gsx=Math.floor(start.x/gs)*gs;
+const gsy=Math.floor(start.y/gs)*gs;
+
+ctx.lineWidth=1;
+for(let x=gsx;x<=end.x;x+=gs){
+const sx=worldToScreen(x,0).x;
+const isMajor=Math.abs(x%((gs*5)))<0.001;
+ctx.strokeStyle=isMajor?'rgba(74,158,255,0.15)':'rgba(74,158,255,0.06)';
+ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,h);ctx.stroke();
+}
+for(let y=gsy;y<=end.y;y+=gs){
+const sy=worldToScreen(0,y).y;
+const isMajor=Math.abs(y%((gs*5)))<0.001;
+ctx.strokeStyle=isMajor?'rgba(74,158,255,0.15)':'rgba(74,158,255,0.06)';
+ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(w,sy);ctx.stroke();
+}
+// Origin
+const origin=worldToScreen(0,0);
+ctx.strokeStyle='rgba(255,74,74,0.5)';ctx.lineWidth=2;
+ctx.beginPath();ctx.moveTo(origin.x-15,origin.y);ctx.lineTo(origin.x+15,origin.y);ctx.stroke();
+ctx.beginPath();ctx.moveTo(origin.x,origin.y-15);ctx.lineTo(origin.x,origin.y+15);ctx.stroke();
+}
+
+// Shape rendering
+function drawShape(shape,isSelected=false,isPreview=false){
+ctx.save();
+if(isPreview)ctx.globalAlpha=0.6;
+const layer=layers.find(l=>l.id===shape.layerId);
+if(layer&&!layer.visible){ctx.restore();return;}
+
+ctx.lineWidth=(shape.stroke||2)*zoom;
+if(shape.lineStyle==='dashed')ctx.setLineDash([8*zoom,4*zoom]);
+else if(shape.lineStyle==='dotted')ctx.setLineDash([2*zoom,4*zoom]);
+else ctx.setLineDash([]);
+ctx.strokeStyle=shape.color||'#4a9eff';
+ctx.fillStyle=shape.fill||'transparent';
+ctx.lineCap='round';ctx.lineJoin='round';
+
+switch(shape.type){
+case'line':{
+const a=worldToScreen(shape.x,shape.y);
+const b=worldToScreen(shape.x2,shape.y2);
+ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+break;}
+case'rect':{
+const p=worldToScreen(shape.x,shape.y);
+const w=shape.w*zoom,h=shape.h*zoom;
+if(shape.fill&&shape.fill!=='transparent'){ctx.fillRect(p.x,p.y,w,h);}
+ctx.strokeRect(p.x,p.y,w,h);
+break;}
+case'circle':{
+const c=worldToScreen(shape.x,shape.y);
+const r=shape.r*zoom;
+ctx.beginPath();ctx.arc(c.x,c.y,r,0,Math.PI*2);
+if(shape.fill&&shape.fill!=='transparent')ctx.fill();
+ctx.stroke();
+break;}
+case'ellipse':{
+const c=worldToScreen(shape.x,shape.y);
+const rx=shape.rx*zoom,ry=shape.ry*zoom;
+ctx.beginPath();ctx.ellipse(c.x,c.y,rx,ry,0,0,Math.PI*2);
+if(shape.fill&&shape.fill!=='transparent')ctx.fill();
+ctx.stroke();
+break;}
+case'polygon':{
+if(shape.points&&shape.points.length>1){
+const pts=shape.points.map(p=>worldToScreen(p.x,p.y));
+ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+if(shape.closed!==false)ctx.closePath();
+if(shape.fill&&shape.fill!=='transparent')ctx.fill();
+ctx.stroke();
+}
+break;}
+case'arc':{
+const c=worldToScreen(shape.x,shape.y);
+ctx.beginPath();ctx.arc(c.x,c.y,shape.r*zoom,(shape.startAngle||0)*Math.PI/180,(shape.endAngle||180)*Math.PI/180);
+ctx.stroke();
+break;}
+case'text':{
+const p=worldToScreen(shape.x,shape.y);
+ctx.font=`${(shape.fontSize||16)*zoom}px Inter`;
+ctx.fillStyle=shape.color||'#4a9eff';
+ctx.fillText(shape.text||'Текст',p.x,p.y);
+break;}
+case'dimension':{
+const a=worldToScreen(shape.x,shape.y);
+const b=worldToScreen(shape.x2,shape.y2);
+ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+// Arrows
+const angle=Math.atan2(b.y-a.y,b.x-a.x);
+const arrowLen=12*zoom;
+ctx.beginPath();
+ctx.moveTo(b.x,b.y);
+ctx.lineTo(b.x-arrowLen*Math.cos(angle-0.3),b.y-arrowLen*Math.sin(angle-0.3));
+ctx.moveTo(b.x,b.y);
+ctx.lineTo(b.x-arrowLen*Math.cos(angle+0.3),b.y-arrowLen*Math.sin(angle+0.3));
+ctx.moveTo(a.x,a.y);
+ctx.lineTo(a.x+arrowLen*Math.cos(angle-0.3),a.y+arrowLen*Math.sin(angle-0.3));
+ctx.moveTo(a.x,a.y);
+ctx.lineTo(a.x+arrowLen*Math.cos(angle+0.3),a.y+arrowLen*Math.sin(angle+0.3));
+ctx.stroke();
+// Label
+const dist=((shape.x2-shape.x)**2+(shape.y2-shape.y)**2)**0.5;
+ctx.font=`${12*zoom}px JetBrains Mono`;
+ctx.textAlign='center';
+ctx.fillStyle=shape.color||'#4a9eff';
+ctx.fillText(Math.round(dist),(a.x+b.x)/2,(a.y+b.y)/2-8*zoom);
+ctx.textAlign='start';
+break;}
+}
+
+// Selection handles
+if(isSelected&&!isPreview){
+ctx.setLineDash([]);
+ctx.strokeStyle='#4a9eff';
+ctx.lineWidth=1.5;
+const bbox=getBBox(shape);
+if(bbox){
+const tl=worldToScreen(bbox.x,bbox.y);
+const br=worldToScreen(bbox.x+bbox.w,bbox.y+bbox.h);
+const pad=4;
+ctx.strokeStyle='rgba(74,158,255,0.4)';ctx.setLineDash([4*zoom,3*zoom]);
+ctx.strokeRect(tl.x-pad,tl.y-pad,(br.x-tl.x)+pad*2,(br.y-tl.y)+pad*2);
+ctx.setLineDash([]);
+// Handles
+ctx.fillStyle='#4a9eff';
+const handleSize=6;
+[
+{x:tl.x-pad,y:tl.y-pad},{x:(tl.x+br.x)/2,y:tl.y-pad},
+{x:br.x+pad,y:tl.y-pad},{x:tl.x-pad,y:(tl.y+br.y)/2},
+{x:br.x+pad,y:(tl.y+br.y)/2},{x:tl.x-pad,y:br.y+pad},
+{x:(tl.x+br.x)/2,y:br.y+pad},{x:br.x+pad,y:br.y+pad}
+].forEach(h=>{
+ctx.fillRect(h.x-handleSize/2,h.y-handleSize/2,handleSize,handleSize);
+});
+}
+}
+ctx.restore();
+}
+
+function getBBox(shape){
+switch(shape.type){
+case'line':{
+const x=Math.min(shape.x,shape.x2),y=Math.min(shape.y,shape.y2);
+return{x,y,w:Math.abs(shape.x2-shape.x),h:Math.abs(shape.y2-shape.y)};}
+case'rect':return{x:shape.x,y:shape.y,w:shape.w,h:shape.h};
+case'circle':return{x:shape.x-shape.r,y:shape.y-shape.r,w:shape.r*2,h:shape.r*2};
+case'ellipse':return{x:shape.x-shape.rx,y:shape.y-shape.ry,w:shape.rx*2,h:shape.ry*2};
+case'polygon':{
+if(!shape.points||shape.points.length<1)return null;
+let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+shape.points.forEach(p=>{
+if(p.x<minX)minX=p.x;if(p.y<minY)minY=p.y;
+if(p.x>maxX)maxX=p.x;if(p.y>maxY)maxY=p.y;
+});
+return{x:minX,y:minY,w:maxX-minX,h:maxY-minY};}
+case'arc':return{x:shape.x-shape.r,y:shape.y-shape.r,w:shape.r*2,h:shape.r*2};
+case'text':return{x:shape.x,y:shape.y-(shape.fontSize||16),w:(shape.text||'Текст').length*(shape.fontSize||16)*0.6,h:shape.fontSize||16};
+case'dimension':{
+const x=Math.min(shape.x,shape.x2),y=Math.min(shape.y,shape.y2);
+return{x,y,w:Math.abs(shape.x2-shape.x),h:Math.abs(shape.y2-shape.y)};}
+}
+return null;
+}
+
+function isPointInShape(wx,wy,shape){
+const threshold=8/zoom;
+switch(shape.type){
+case'line':{
+const d=distToSegment({x:wx,y:wy},{x:shape.x,y:shape.y},{x:shape.x2,y:shape.y2});
+return d<threshold;}
+case'rect':return wx>=shape.x&&wx<=shape.x+shape.w&&wy>=shape.y&&wy<=shape.y+shape.h;
+case'circle':{
+const d=Math.sqrt((wx-shape.x)**2+(wy-shape.y)**2);
+return d<=shape.r+threshold;}
+case'ellipse':{
+const dx=(wx-shape.x)/shape.rx,dy=(wy-shape.y)/shape.ry;
+return(dx*dx+dy*dy)<=1.1;}
+case'polygon':{
+if(!shape.points||shape.points.length<3)return false;
+return pointInPolygon(wx,wy,shape.points);}
+case'arc':{
+const d=Math.sqrt((wx-shape.x)**2+(wy-shape.y)**2);
+return Math.abs(d-shape.r)<threshold+2;}
+case'text':{
+const bb=getBBox(shape);
+return bb&&wx>=bb.x&&wx<=bb.x+bb.w&&wy>=bb.y&&wy<=bb.y+bb.h;}
+case'dimension':{
+const d=distToSegment({x:wx,y:wy},{x:shape.x,y:shape.y},{x:shape.x2,y:shape.y2});
+return d<threshold;}
+}
+return false;
+}
+
+function distToSegment(p,a,b){
+const dx=b.x-a.x,dy=b.y-a.y;
+const lenSq=dx*dx+dy*dy;
+if(lenSq===0)return Math.sqrt((p.x-a.x)**2+(p.y-a.y)**2);
+let t=((p.x-a.x)*dx+(p.y-a.y)*dy)/lenSq;
+t=Math.max(0,Math.min(1,t));
+return Math.sqrt((p.x-(a.x+t*dx))**2+(p.y-(a.y+t*dy))**2);
+}
+
+function pointInPolygon(px,py,points){
+let inside=false;
+for(let i=0,j=points.length-1;i<points.length;j=i++){
+const xi=points[i].x,yi=points[i].y,xj=points[j].x,yj=points[j].y;
+if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi))inside=!inside;
+}
+return inside;
+}
+
+// Main render
+function render(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+// Background
+ctx.fillStyle='#12122a';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+drawGrid();
+
+// Draw shapes by layer
+const sortedLayers=[...layers].sort((a,b)=>a.id-b.id);
+sortedLayers.forEach(layer=>{
+if(!layer.visible)return;
+shapes.filter(s=>s.layerId===layer.id).forEach(shape=>{
+const sel=selectedShapes.includes(shape.id);
+drawShape(shape,sel);
+});
+});
+
+// Preview shape
+if(currentShape)drawShape(currentShape,false,true);
+
+// Polygon preview
+if(isDrawingPolygon&&polygonPoints.length>0){
+const pts=polygonPoints.map(p=>worldToScreen(p.x,p.y));
+ctx.strokeStyle='rgba(74,158,255,0.6)';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);
+ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);
+ctx.stroke();
+ctx.setLineDash([]);
+// Points
+pts.forEach(p=>{
+ctx.fillStyle='#ffca4a';
+ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();
+});
+}
+}
+
+// Mouse events
+canvas.addEventListener('mousedown',e=>{
+const rect=canvas.getBoundingClientRect();
+const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+const wp=screenToWorld(mx,my);
+const snapped=snapPoint(wp);
+
+// Middle button or space+click for pan
+if(e.button===1||isPanning){
+isPanning=true;
+panStart={x:mx-panX,y:my-panY};
+canvas.style.cursor='grabbing';
+return;
+}
+
+if(e.button===0){
+if(currentTool==='select'){
+// Check for shape hit (reverse order for top-most first)
+let hit=null;
+for(let i=shapes.length-1;i>=0;i--){
+const layer=layers.find(l=>l.id===shapes[i].layerId);
+if(layer&&layer.locked)continue;
+if(isPointInShape(wp.x,wp.y,shapes[i])){
+hit=shapes[i];break;
+}
+}
+if(hit){
+if(e.shiftKey){
+const idx=selectedShapes.indexOf(hit.id);
+if(idx>=0)selectedShapes.splice(idx,1);else selectedShapes.push(hit.id);
+}else{
+if(!selectedShapes.includes(hit.id))selectedShapes=[hit.id];
+}
+}else{
+if(!e.shiftKey)selectedShapes=[];
+}
+updatePropertiesPanel();
+updateShapeList();
+render();
+}else if(currentTool==='line'){
+drawStart=snapped;
+currentShape={id:-1,type:'line',x:snapped.x,y:snapped.y,x2:snapped.x,y2:snapped.y,color:document.getElementById('propColor').value,stroke:parseInt(document.getElementById('propStroke').value),lineStyle:document.getElementById('propLineStyle').value,layerId:activeLayerId};
+}else if(currentTool==='rect'){
+drawStart=snapped;
+currentShape={id:-1,type:'rect',x:snapped.x,y:snapped.y,w:0,h:0,color:document.getElementById('propColor').value,stroke:parseInt(document.getElementById('propStroke').value),lineStyle:document.getElementById('propLineStyle').value,fill:document.getElementById('propFill').value,layerId:activeLayerId};
+}else if(currentTool==='circle'){
+drawStart=snapped;
+currentShape={id:-1,type:'circle',x:snapped.x,y:snapped.y,r:0,color:document.getElementById('propColor').value,stroke:parseInt(document.getElementById('propStroke').value),lineStyle:document.getElementById('propLineStyle').value,layerId:activeLayerId};
+}else if(currentTool==='ellipse'){
+drawStart=snapped;
+currentShape={id:-1,type:'ellipse',x:snapped.x,y:snapped.y,rx:0,ry:0,color:document.getElementById('propColor').value,stroke:parseInt(document.getElementById('propStroke').value),lineStyle:document.getElementById('propLineStyle').value,layerId:activeLayerId};
+}else if(currentTool==='polygon'){
+if(e.detail===2&&polygonPoints.length>2){
+// Double click to finish
+finishPolygon();
+}else{
+if(!isDrawingPolygon)isDrawingPolygon=true;
+polygonPoints.push({...snapped});
+}
+}else if(currentTool==='arc'){
+drawStart=snapped;
+currentShape={id:-1,type:'arc',x:snapped.x,y:snapped.y,r:0,startAngle:0,endAngle:180,color:document.getElementById('propColor').value,stroke:parseInt(document.getElementById('propStroke').value),lineStyle:document.getElementById('propLineStyle').value,layerId:activeLayerId};
+}else if(currentTool==='text'){
+const text=prompt('Введите текст:','Текст');
+if(text){
+const newShape={id:nextId++,type:'text',x:snapped.x,y:snapped.y,text:text,fontSize:16,color:document.getElementById('propColor').value,stroke:parseInt(document.getElementById('propStroke').value),layerId:activeLayerId};
+saveUndo();
+shapes.push(newShape);
+selectedShapes=[newShape.id];
+updateShapeList();updatePropertiesPanel();render();
+}
+}else if(currentTool==='dimension'){
+drawStart=snapped;
+currentShape={id:-1,type:'dimension',x:snapped.x,y:snapped.y,x2:snapped.x,y2:snapped.y,color:document.getElementById('propColor').value,stroke:parseInt(document.getElementById('propStroke').value),layerId:activeLayerId};
+}
+}
+});
+
+canvas.addEventListener('mousemove',e=>{
+const rect=canvas.getBoundingClientRect();
+const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+const wp=screenToWorld(mx,my);
+const snapped=snapPoint(wp);
+
+document.getElementById('coordDisplay').textContent=`X: ${Math.round(wp.x)} Y: ${Math.round(wp.y)}`;
+
+if(isPanning){
+panX=mx-panStart.x;
+panY=my-panStart.y;
+render();
+return;
+}
+
+if(e.buttons===1&&currentShape){
+const s=currentShape;
+if(s.type==='line'){s.x2=snapped.x;s.y2=snapped.y;}
+else if(s.type==='rect'){s.w=snapped.x-s.x;s.h=snapped.y-s.y;}
+else if(s.type==='circle'){
+const r=Math.sqrt((snapped.x-s.x)**2+(snapped.y-s.y)**2);
+s.r=Math.round(r);
+}else if(s.type==='ellipse'){
+s.rx=Math.abs(snapped.x-s.x);s.ry=Math.abs(snapped.y-s.y);
+}else if(s.type==='arc'){
+const r=Math.sqrt((snapped.x-s.x)**2+(snapped.y-s.y)**2);
+s.r=Math.round(r);
+}else if(s.type==='dimension'){s.x2=snapped.x;s.y2=snapped.y;}
+render();
+}else if(e.buttons===1&&currentTool==='select'&&selectedShapes.length>0){
+// Move selected shapes
+const layer=layers.find(l=>l.id===shapes.find(s=>s.id===selectedShapes[0])?.layerId);
+if(layer&&!layer.locked){
+if(!this._dragOffset){
+const first=shapes.find(s=>s.id===selectedShapes[0]);
+const bb=getBBox(first);
+if(bb)this._dragOffset={x:wp.x-bb.x,y:wp.y-bb.y};
+}else{
+saveUndo();
+selectedShapes.forEach(id=>{
+const sh=shapes.find(s=>s.id===id);
+if(!sh)return;
+const bb=getBBox(sh);
+if(!bb)return;
+const dx=wp.x-this._dragOffset.x-bb.x;
+const dy=wp.y-this._dragOffset.y-bb.y;
+moveShape(sh,dx,dy);
+});
+this._dragOffset={x:wp.x-getBBox(shapes.find(s=>s.id===selectedShapes[0]))?.x,y:wp.y-getBBox(shapes.find(s=>s.id===selectedShapes[0]))?.y};
+updatePropertiesPanel();
+render();
+}
+}
+}
+});
+
+canvas.addEventListener('mouseup',e=>{
+if(isPanning){
+isPanning=false;
+updateCursor();
+return;
+}
+if(currentShape&&(currentShape.type!=='circle'||currentShape.r>1)){
+saveUndo();
+currentShape.id=nextId++;
+const s=currentShape;
+if(s.type==='rect'&&s.w<0){s.x+=s.w;s.w=-s.w;}
+if(s.type==='rect'&&s.h<0){s.y+=s.h;s.h=-s.h;}
+shapes.push({...s});
+selectedShapes=[s.id];
+updateShapeList();updatePropertiesPanel();
+}
+currentShape=null;
+this._dragOffset=null;
+render();
+});
+
+canvas.addEventListener('wheel',e=>{
+e.preventDefault();
+const rect=canvas.getBoundingClientRect();
+const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+const wpBefore=screenToWorld(mx,my);
+const delta=e.deltaY>0?0.9:1.1;
+zoom=Math.max(0.1,Math.min(10,zoom*delta));
+const wpAfter=screenToWorld(mx,my);
+panX+=(wpAfter.x-wpBefore.x)*zoom;
+panY+=(wpAfter.y-wpBefore.y)*zoom;
+document.getElementById('zoomDisplay').textContent=Math.round(zoom*100)+'%';
+render();
+},{passive:false});
+
+canvas.addEventListener('contextmenu',e=>{
+e.preventDefault();
+const cm=document.getElementById('contextMenu');
+cm.style.display='block';
+cm.style.left=e.clientX+'px';
+cm.style.top=e.clientY+'px';
+if(selectedShapes.length===0)cm.style.display='none';
+});
+
+document.addEventListener('click',e=>{
+const cm=document.getElementById('contextMenu');
+if(!cm.contains(e.target))cm.style.display='none';
+});
+
+function moveShape(shape,dx,dy){
+switch(shape.type){
+case'line':shape.x+=dx;shape.y+=dy;shape.x2+=dx;shape.y2+=dy;break;
+case'rect':case'circle':case'ellipse':case'arc':case'text':shape.x+=dx;shape.y+=dy;break;
+case'polygon':shape.points.forEach(p=>{p.x+=dx;p.y+=dy;});break;
+case'dimension':shape.x+=dx;shape.y+=dy;shape.x2+=dx;shape.y2+=dy;break;
+}
+}
+
+function finishPolygon(){
+if(polygonPoints.length<3)return;
+const color=document.getElementById('propColor').value;
+const strokeW=parseInt(document.getElementById('propStroke').value);
+const fill=document.getElementById('propFill').value;
+const ls=document.getElementById('propLineStyle').value;
+saveUndo();
+const newShape={id:nextId++,type:'polygon',points:[...polygonPoints],closed:true,color:color,stroke:strokeW,lineStyle:ls,fill:fill,layerId:activeLayerId};
+shapes.push(newShape);
+selectedShapes=[newShape.id];
+isDrawingPolygon=false;
+polygonPoints=[];
+updateShapeList();updatePropertiesPanel();render();
+}
+
+// Undo/Redo
+function saveUndo(){
+undoStack.push(JSON.stringify(shapes));
+if(undoStack.length>50)undoStack.shift();
+redoStack=[];
+}
+function undo(){
+if(undoStack.length===0)return;
+redoStack.push(JSON.stringify(shapes));
+shapes=JSON.parse(undoStack.pop());
+selectedShapes=[];
+updateShapeList();updatePropertiesPanel();render();
+}
+function redo(){
+if(redoStack.length===0)return;
+undoStack.push(JSON.stringify(shapes));
+shapes=JSON.parse(redoStack.pop());
+selectedShapes=[];
+updateShapeList();updatePropertiesPanel();render();
+}
+
+// Selection
+function selectAll(){
+selectedShapes=shapes.map(s=>s.id);
+updatePropertiesPanel();updateShapeList();render();
+}
+function deleteSelected(){
+if(selectedShapes.length===0)return;
+saveUndo();
+shapes=shapes.filter(s=>!selectedShapes.includes(s.id));
+selectedShapes=[];
+updateShapeList();updatePropertiesPanel();render();
+}
+function duplicateSelected(){
+if(selectedShapes.length===0)return;
+saveUndo();
+const newIds=[];
+selectedShapes.forEach(id=>{
+const orig=shapes.find(s=>s.id===id);
+if(!orig)return;
+const copy=JSON.parse(JSON.stringify(orig));
+copy.id=nextId++;
+moveShape(copy,20,20);
+shapes.push(copy);
+newIds.push(copy.id);
+});
+selectedShapes=newIds;
+updateShapeList();updatePropertiesPanel();render();
+}
+function bringToFront(){
+if(selectedShapes.length===0)return;
+saveUndo();
+const selShapes=shapes.filter(s=>selectedShapes.includes(s.id));
+shapes=shapes.filter(s=>!selectedShapes.includes(s.id));
+shapes.push(...selShapes);
+render();
+}
+function sendToBack(){
+if(selectedShapes.length===0)return;
+saveUndo();
+const selShapes=shapes.filter(s=>selectedShapes.includes(s.id));
+shapes=shapes.filter(s=>!selectedShapes.includes(s.id));
+shapes=[...selShapes,...shapes];
+render();
+}
+
+// Zoom controls
+function zoomIn(){zoom=Math.min(10,zoom*1.2);document.getElementById('zoomDisplay').textContent=Math.round(zoom*100)+'%';render();}
+function zoomOut(){zoom=Math.max(0.1,zoom/1.2);document.getElementById('zoomDisplay').textContent=Math.round(zoom*100)+'%';render();}
+function fitView(){
+if(shapes.length===0){zoom=1;panX=canvas.width/2;panY=canvas.height/2;render();return;}
+let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+shapes.forEach(s=>{
+const bb=getBBox(s);
+if(!bb)return;
+if(bb.x<minX)minX=bb.x;if(bb.y<minY)minY=bb.y;
+if(bb.x+bb.w>maxX)maxX=bb.x+bb.w;if(bb.y+bb.h>maxY)maxY=bb.y+bb.h;
+});
+const w=maxX-minX,h=maxY-minY;
+const padding=40;
+zoom=Math.min((canvas.width-padding*2)/w,(canvas.height-padding*2)/h,5);
+panX=canvas.width/2-(minX+maxX)/2*zoom;
+panY=canvas.height/2-(minY+maxY)/2*zoom;
+document.getElementById('zoomDisplay').textContent=Math.round(zoom*100)+'%';
+render();
+}
+
+// Grid/Snap
+function toggleGrid(){showGrid=!showGrid;document.getElementById('gridStatus').textContent=showGrid?'Сетка: '+gridSize+'px':'Сетка: ВЫКЛ';render();}
+function toggleSnap(){snapToGrid=!snapToGrid;document.getElementById('snapStatus').textContent=snapToGrid?'Привязка: ВКЛ':'Привязка: ВЫКЛ';}
+
+// Properties
+function updatePropertiesPanel(){
+const sel=selectedShapes.length===1?shapes.find(s=>s.id===selectedShapes[0]):null;
+const px=document.getElementById('propX');
+const py=document.getElementById('propY');
+const pw=document.getElementById('propW');
+const ph=document.getElementById('propH');
+if(sel){
+px.value=Math.round(sel.x||0);
+py.value=Math.round(sel.y||0);
+const bb=getBBox(sel);
+pw.value=bb?Math.round(bb.w):0;
+ph.value=bb?Math.round(bb.h):0;
+px.disabled=false;py.disabled=false;
+if(sel.color)document.getElementById('propColor').value=sel.color;
+if(sel.stroke)document.getElementById('propStroke').value=sel.stroke;
+if(sel.lineStyle)document.getElementById('propLineStyle').value=sel.lineStyle;
+if(sel.fill)document.getElementById('propFill').value=sel.fill;
+}else{
+px.value='';py.value='';pw.value='';ph.value='';
+px.disabled=true;py.disabled=true;
+}
+}
+
+function applyProperty(prop,value){
+if(selectedShapes.length===0)return;
+saveUndo();
+selectedShapes.forEach(id=>{
+const sh=shapes.find(s=>s.id===id);
+if(!sh)return;
+if(prop==='x'){const bb=getBBox(sh);if(bb)moveShape(sh,value-bb.x,0);}
+else if(prop==='y'){const bb=getBBox(sh);if(bb)moveShape(sh,0,value-bb.y);}
+else if(prop==='w'||prop==='h'){
+const bb=getBBox(sh);
+if(bb&&sh.type==='rect'){
+if(prop==='w')sh.w=value;
+else sh.h=value;
+}
+}else sh[prop]=value;
+});
+updatePropertiesPanel();render();
+}
+
+// Layers
+function updateLayersPanel(){
+const lp=document.getElementById('layersPanel');
+lp.innerHTML='';
+layers.forEach(l=>{
+const div=document.createElement('div');
+div.className='layer-item'+(l.id===activeLayerId?' active':'');
+div.innerHTML=`<span class="layer-vis" onclick="event.stopPropagation();toggleLayerVis(${l.id})">${l.visible?'👁':'👁‍🗨'}</span>
+<span style="flex:1" onclick="setActiveLayer(${l.id})">${l.name}</span>
+${layers.length>1?`<span style="cursor:pointer;color:var(--danger)" onclick="event.stopPropagation();deleteLayer(${l.id})">✕</span>`:''}`;
+lp.appendChild(div);
+});
+}
+function toggleLayerVis(id){
+const l=layers.find(l=>l.id===id);
+if(l)l.visible=!l.visible;
+updateLayersPanel();render();
+}
+function setActiveLayer(id){
+activeLayerId=id;
+updateLayersPanel();
+}
+function addLayer(){
+const id=Math.max(0,...layers.map(l=>l.id))+1;
+layers.push({id,name:'Слой '+id,visible:true,locked:false});
+activeLayerId=id;
+updateLayersPanel();
+}
+function deleteLayer(id){
+if(layers.length<=1)return;
+shapes=shapes.filter(s=>s.layerId!==id);
+layers=layers.filter(l=>l.id!==id);
+if(activeLayerId===id)activeLayerId=layers[0].id;
+updateLayersPanel();updateShapeList();render();
+}
+
+// Shape list
+function updateShapeList(){
+const sl=document.getElementById('shapeList');
+sl.innerHTML='';
+const typeNames={line:'Линия',rect:'Прямоуг.',circle:'Окружн.',ellipse:'Эллипс',polygon:'Многоуг.',arc:'Дуга',text:'Текст',dimension:'Размер'};
+const typeIcons={line:'╱',rect:'▭',circle:'○',ellipse:'⬭',polygon:'⬡',arc:'◠',text:'T',dimension:'↔'};
+shapes.forEach(s=>{
+const div=document.createElement('div');
+div.className='shape-item'+(selectedShapes.includes(s.id)?' selected':'');
+div.innerHTML=`<span class="shape-type">${typeIcons[s.type]||'?'}</span><span>${typeNames[s.type]||s.type} #${s.id}</span>`;
+div.onclick=()=>{
+if(selectedShapes.includes(s.id))selectedShapes=selectedShapes.filter(id=>id!==s.id);
+else selectedShapes=[s.id];
+updatePropertiesPanel();updateShapeList();render();
+};
+sl.appendChild(div);
+});
+document.getElementById('shapeCount').textContent=shapes.length+' объектов';
+}
+
+// File operations
+function newProject(){
+if(shapes.length>0&&!confirm('Создать новый проект? Несохранённые изменения будут потеряны.'))return;
+shapes=[];selectedShapes=[];undoStack=[];redoStack=[];nextId=1;
+updateShapeList();updatePropertiesPanel();render();
+}
+function saveProject(){
+const data=JSON.stringify({shapes,layers,nextId,zoom,panX,panY});
+const blob=new Blob([data],{type:'application/json'});
+const a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download='webcad_project.json';
+a.click();
+}
+function loadProject(){
+const input=document.createElement('input');
+input.type='file';input.accept='.json';
+input.onchange=e=>{
+const file=e.target.files[0];
+const reader=new FileReader();
+reader.onload=ev=>{
+try{
+const data=JSON.parse(ev.target.result);
+shapes=data.shapes||[];layers=data.layers||[{id:0,name:'Слой 1',visible:true,locked:false}];
+nextId=data.nextId||shapes.length+1;
+zoom=data.zoom||1;panX=data.panX||canvas.width/2;panY=data.panY||canvas.height/2;
+selectedShapes=[];undoStack=[];redoStack=[];
+updateShapeList();updatePropertiesPanel();updateLayersPanel();render();
+}catch(err){alert('Ошибка загрузки файла');}
+};
+reader.readAsText(file);
+};
+input.click();
+}
+
+function exportPNG(){
+const tempCanvas=document.createElement('canvas');
+tempCanvas.width=canvas.width;tempCanvas.height=canvas.height;
+const tctx=tempCanvas.getContext('2d');
+// White background
+tctx.fillStyle='#ffffff';
+tctx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
+// Render shapes
+shapes.forEach(shape=>{
+tctx.save();
+tctx.lineWidth=shape.stroke||2;
+tctx.strokeStyle=shape.color||'#000000';
+tctx.fillStyle=shape.fill||'transparent';
+tctx.lineCap='round';tctx.join='round';
+switch(shape.type){
+case'line':tctx.beginPath();tctx.moveTo(shape.x-shape.x+100,shape.y-shape.y+100);tctx.lineTo(shape.x2-shape.x+100,shape.y2-shape.y+100);tctx.stroke();break;
+case'rect':if(shape.fill&&shape.fill!=='transparent')tctx.fillRect(shape.x-shape.x+100,shape.y-shape.y+100,shape.w,shape.h);tctx.strokeRect(shape.x-shape.x+100,shape.y-shape.y+100,shape.w,shape.h);break;
+case'circle':tctx.beginPath();tctx.arc(shape.x-shape.x+100,shape.y-shape.y+100,shape.r,0,Math.PI*2);if(shape.fill&&shape.fill!=='transparent')tctx.fill();tctx.stroke();break;
+case'ellipse':tctx.beginPath();tctx.ellipse(shape.x-shape.x+100,shape.y-shape.y+100,shape.rx,shape.ry,0,0,Math.PI*2);if(shape.fill&&shape.fill!=='transparent')tctx.fill();tctx.stroke();break;
+}
+tctx.restore();
+});
+const a=document.createElement('a');
+a.href=tempCanvas.toDataURL('image/png');
+a.download='webcad_export.png';
+a.click();
+}
+
+function exportSVG(){
+let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">\n`;
+shapes.forEach(s=>{
+const layer=layers.find(l=>l.id===s.layerId);
+if(layer&&!layer.visible)return;
+switch(s.type){
+case'line':svg+=`<line x1="${s.x}" y1="${s.y}" x2="${s.x2}" y2="${s.y2}" stroke="${s.color}" stroke-width="${s.stroke}"/>\n`;break;
+case'rect':svg+=`<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${s.fill||'none'}" stroke="${s.color}" stroke-width="${s.stroke}"/>\n`;break;
+case'circle':svg+=`<circle cx="${s.x}" cy="${s.y}" r="${s.r}" fill="${s.fill||'none'}" stroke="${s.color}" stroke-width="${s.stroke}"/>\n`;break;
+case'ellipse':svg+=`<ellipse cx="${s.x}" cy="${s.y}" rx="${s.rx}" ry="${s.ry}" fill="${s.fill||'none'}" stroke="${s.color}" stroke-width="${s.stroke}"/>\n`;break;
+}
+});
+svg+=`</svg>`;
+const blob=new Blob([svg],{type:'image/svg+xml'});
+const a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download='webcad_export.svg';
+a.click();
+}
+
+function showHelp(){document.getElementById('helpModal').classList.add('active');}
+function closeHelp(){document.getElementById('helpModal').classList.remove('active');}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+
+if(e.ctrlKey||e.metaKey){
+switch(e.key.toLowerCase()){
+case'z':e.preventDefault();if(e.shiftKey)redo();else undo();break;
+case'y':e.preventDefault();redo();break;
+case's':e.preventDefault();saveProject();break;
+case'a':e.preventDefault();selectAll();break;
+case'd':e.preventDefault();duplicateSelected();break;
+case'e':e.preventDefault();exportPNG();break;
+case'n':e.preventDefault();newProject();break;
+case'o':e.preventDefault();loadProject();break;
+}
+return;
+}
+
+switch(e.key.toLowerCase()){
+case'v':setTool('select');break;
+case'l':setTool('line');break;
+case'r':setTool('rect');break;
+case'c':setTool('circle');break;
+case'e':setTool('ellipse');break;
+case'p':setTool('polygon');break;
+case'a':if(!e.ctrlKey)setTool('arc');break;
+case't':setTool('text');break;
+case'd':if(!e.ctrlKey)setTool('dimension');break;
+case'g':toggleGrid();break;
+case's':if(!e.ctrlKey)toggleSnap();break;
+case'f':fitView();break;
+case'delete':case'backspace':deleteSelected();break;
+case'escape':selectedShapes=[];isDrawingPolygon=false;polygonPoints=[];currentShape=null;updatePropertiesPanel();updateShapeList();render();break;
+}
+});
+
+// Space for panning
+let spaceDown=false;
+document.addEventListener('keydown',e=>{
+if(e.code==='Space'&&!spaceDown){spaceDown=true;isPanning=true;canvas.style.cursor='grab';e.preventDefault();}
+});
+document.addEventListener('keyup',e=>{
+if(e.code==='Space'){spaceDown=false;if(!e.buttons)isPanning=false;updateCursor();}
+});
+
+// Initialize
+function init(){
+resizeCanvas();
+initToolbar();
+updateLayersPanel();
+updateShapeList();
+panX=canvas.width/2;
+panY=canvas.height/2;
+
+// Add demo shapes
+shapes=[
+{id:nextId++,type:'rect',x:-100,y:-80,w:200,h:160,color:'#4a9eff',stroke:2,lineStyle:'solid',fill:'rgba(74,158,255,0.08)',layerId:0},
+{id:nextId++,type:'circle',x:0,y:0,r:50,color:'#ff4a6a',stroke:2,lineStyle:'solid',layerId:0},
+{id:nextId++,type:'line',x:-150,y:-120,x2:150,y2:120,color:'#4aff8a',stroke:2,lineStyle:'solid',layerId:0},
+{id:nextId++,type:'ellipse',x:120,y:-80,rx:60,ry:30,color:'#ffca4a',stroke:2,lineStyle:'solid',layerId:0},
+{id:nextId++,type:'polygon',points:[{x:-150,y:-100},{x:-100,y:-150},{x:-50,y:-100},{x:-75,y:-60},{x:-125,y:-60}],closed:true,color:'#a855f7',stroke:2,lineStyle:'solid',fill:'rgba(168,85,247,0.08)',layerId:0},
+{id:nextId++,type:'text',x:-200,y:120,text:'WebCAD Pro',fontSize:24,color:'#e8e8f0',stroke:1,layerId:0},
+];
+selectedShapes=[];
+updateShapeList();
+updatePropertiesPanel();
+render();
+}
+
+init();
+</script>
+</body>
+</html>
+
